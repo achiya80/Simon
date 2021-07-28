@@ -2,6 +2,8 @@ package PresentationLayer;
 
 import BusinessLayer.SimonSequence;
 import BusinessLayer.User;
+import DataAccessLayer.UserControllerDTO;
+import DataAccessLayer.UserDTO;
 
 import java.sql.Date;
 import java.sql.Time;
@@ -18,8 +20,9 @@ import java.util.function.IntConsumer;
 public class SimonGame {
 
 
+    private Label topScores = new Label("top 10 scores");
     private Label playerInfo = new Label("");
-    private Font favoriteFont = new Font("Arial", Font.PLAIN, 50);
+    private static Font favoriteFont = new Font("Arial", Font.PLAIN, 50);
     private Label title = new Label("Simon Says!");
     private static final int width = 200;
     private static final int height = 200;
@@ -47,8 +50,16 @@ public class SimonGame {
                 }
             }
         });
+        List<UserDTO> res  = new UserControllerDTO().SelectUsers();
+        res.sort((o1, o2) -> o1.compareTo(o2));
+        for (int  i = 0;i < 10;i++){
+            labels[i] = new Label(String.format("%d. player: %s  score: %d",i+1, res.get(i).nickname,res.get(i).sequence ));
+            labels[i].setBounds(700, 400 + 25*i, 500, 25);
+            frame.add(labels[i]);
+        }
         sequence.addRandomly();
         frame.add(title);
+        topScores.setBounds(700, 350, 500, 50);
         playerInfo.setBounds(700, 250, 500 , 100);
         updateInfo();
         playerInfo.setFont(new Font("Arial", Font.PLAIN, 30));
@@ -58,6 +69,7 @@ public class SimonGame {
         accept.addActionListener(acceptListener);
         frame.add(text);
         frame.add(name);
+        frame.add(topScores);
         frame.add(playerInfo);
         frame.add(accept);
         frame.setSize(1500,900);//500 width and 600 height
@@ -76,7 +88,7 @@ public class SimonGame {
     }
 
     private JButton start = new JButton("Start");
-    private SimonSequence sequence = new SimonSequence(new User(String.format("Guest%d", (int)(Math.random()*10000))));
+    private SimonSequence sequence = new SimonSequence(new User(String.format("Guest%d", (int)(Math.random()*100000))));
     private int color = 0;
     private JFrame frame = new JFrame();
     private List<JButton> btnArr = new LinkedList<>(){
@@ -99,6 +111,7 @@ public class SimonGame {
             add(j4);
         }
     };
+    private Label[] labels = new Label[10];
     private IntConsumer clickButton;
     private Label name = new Label("name");
     private JTextArea text = new JTextArea("");
@@ -163,6 +176,7 @@ public class SimonGame {
 
     private void buttonClick(int x) throws InterruptedException {
         if(!sequence.isMatching(color)){
+            new UserDTO(sequence.getUser().getName(), sequence.getSequence().size());
             messageBox("wrong input, you lost", "Game Ended");
             over = true;
             System.exit(0);
